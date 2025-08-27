@@ -107,33 +107,20 @@ const questionText = document.getElementById('question-text');
 const option1Button = document.getElementById('option1-button');
 const option2Button = document.getElementById('option2-button');
 const optionsContainer = document.getElementById('options-container');
-const resultsContainer = document.getElementById('results-container');
-const resultFill1 = document.getElementById('result-fill1');
-const resultFill2 = document.getElementById('result-fill2');
-const resultLabel1 = document.getElementById('result-label1');
-const resultLabel2 = document.getElementById('result-label2');
 const nextButton = document.getElementById('next-button');
 
 // --- Game State ---
 let currentQuestionIndex = 0;
-let votes = { option1: 0, option2: 0 };
-let totalVotes = 0;
 
 // --- Functions ---
 function initGame() {
-  // Hide results and next button
-  resultsContainer.style.display = 'none';
-  nextButton.style.display = 'none';
-  optionsContainer.style.display = 'flex';
-  
-  // Reset votes
-  votes = { option1: 0, option2: 0 };
-  totalVotes = 0;
-
   // Check if all questions have been asked
   if (currentQuestionIndex >= questions.length) {
-    // Reset to the beginning
-    currentQuestionIndex = 0;
+    // Display a "Game Over" message
+    questionText.textContent = "You've reached the end of the questions!";
+    optionsContainer.style.display = 'none';
+    nextButton.style.display = 'none';
+    return;
   }
   
   // Get the current question
@@ -144,40 +131,40 @@ function initGame() {
   option1Button.textContent = currentQuestion.option1;
   option2Button.textContent = currentQuestion.option2;
   
-  // Increment index for the next question
-  currentQuestionIndex++;
+  // Show the options and hide the next button
+  optionsContainer.style.display = 'flex';
+  nextButton.style.display = 'none';
+
+  // Enable buttons and reset styles for the new question
+  option1Button.disabled = false;
+  option2Button.disabled = false;
+  option1Button.style.backgroundColor = '';
+  option1Button.style.color = '';
+  option2Button.style.backgroundColor = '';
+  option2Button.style.color = '';
 }
 
-function handleVote(option) {
-  votes[option]++;
-  totalVotes++;
-  
-  displayResults();
-}
+function handleSelection(event) {
+  // Disable options after a selection is made
+  option1Button.disabled = true;
+  option2Button.disabled = true;
 
-function displayResults() {
-  // Hide the option buttons
-  optionsContainer.style.display = 'none';
-  
-  // Show results and next button
-  resultsContainer.style.display = 'block';
+  // Highlight the selected button
+  event.target.style.backgroundColor = 'var(--kiva-green)';
+  event.target.style.color = '#fff';
+
+  // Show the next button
   nextButton.style.display = 'block';
-
-  // Calculate percentages
-  const percent1 = totalVotes === 0 ? 0 : (votes.option1 / totalVotes) * 100;
-  const percent2 = totalVotes === 0 ? 0 : (votes.option2 / totalVotes) * 100;
-
-  // Update the result bars
-  resultFill1.style.width = `${percent1}%`;
-  resultFill2.style.width = `${percent2}%`;
-  resultLabel1.textContent = `${votes.option1} Votes (${percent1.toFixed(0)}%)`;
-  resultLabel2.textContent = `${votes.option2} Votes (${percent2.toFixed(0)}%)`;
 }
 
 // --- Event Listeners ---
-option1Button.addEventListener('click', () => handleVote('option1'));
-option2Button.addEventListener('click', () => handleVote('option2'));
-nextButton.addEventListener('click', initGame);
+option1Button.addEventListener('click', handleSelection);
+option2Button.addEventListener('click', handleSelection);
+
+nextButton.addEventListener('click', () => {
+  currentQuestionIndex++;
+  initGame();
+});
 
 // --- Start the game on page load ---
 initGame();
