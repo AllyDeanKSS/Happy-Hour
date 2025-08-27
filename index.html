@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Jeopardy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0d1117;
+            color: #e2e8f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .game-title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #a3e635;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .scoreboard {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #cbd5e1;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            width: 100%;
+        }
+
+        .category-header {
+            background-color: #2d3748;
+            border: 2px solid #a3e635;
+            border-radius: 8px;
+            padding: 1rem;
+            font-weight: bold;
+            font-size: 1.25rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-transform: uppercase;
+            text-align: center;
+            min-height: 80px;
+        }
+
+        .card {
+            background-color: #1a202c;
+            border: 2px solid #a3e635;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            min-height: 100px;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            background-color: #2c3546;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .card.answered {
+            background-color: #4a5568;
+            color: #718096;
+            cursor: not-allowed;
+            pointer-events: none;
+            text-decoration: line-through;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background-color: #1a202c;
+            border: 4px solid #a3e635;
+            border-radius: 12px;
+            padding: 40px;
+            max-width: 80%;
+            text-align: center;
+            position: relative;
+        }
+
+        .question-text {
+            font-size: 2.25rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .answer-text {
+            font-size: 2rem;
+            font-style: italic;
+            color: #a3e635;
+        }
+
+        .modal-button {
+            background-color: #a3e635;
+            color: #1a202c;
+            font-weight: bold;
+            padding: 12px 24px;
+            border-radius: 9999px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            margin-top: 20px;
+        }
+
+        .modal-button:hover {
+            background-color: #86efac;
+        }
+
+        .score-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .score-button {
+            background-color: #a3e635;
+            color: #1a202c;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .score-button:hover {
+            background-color: #86efac;
+        }
+
+        @media (max-width: 768px) {
+            .game-title {
+                font-size: 2rem;
+            }
+            .board {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            .category-header {
+                font-size: 1rem;
+                min-height: 60px;
+            }
+            .card {
+                font-size: 1.5rem;
+                min-height: 80px;
+            }
+            .question-text {
+                font-size: 1.5rem;
+            }
+            .answer-text {
+                font-size: 1.25rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="game-container">
+    <h1 class="game-title">The Dankest Jeopardy</h1>
+    <div class="scoreboard">Score: <span id="score">0</span></div>
+    <div class="board" id="game-board"></div>
+</div>
+
+<div class="modal-overlay" id="modal-overlay">
+    <div class="modal-content">
+        <p class="question-text" id="modal-question"></p>
+        <p class="answer-text hidden" id="modal-answer"></p>
+        <button class="modal-button" id="modal-button">Reveal Answer</button>
+        <div class="score-buttons hidden" id="score-buttons">
+            <button class="score-button" id="correct-button">Correct</button>
+            <button class="score-button" id="incorrect-button">Incorrect</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Define the categories, questions, and answers for the game.
+        // The points are automatically assigned based on their position.
+        const jeopardyData = {
+            categories: [
+                "California Culture",
+                "Michigan Made",
+                "Colorado Facts",
+                "Ohio Origins",
+                "Cannabis Lingo"
+            ],
+            questions: [
+                [
+                    { q: "This famous theme park in Anaheim, CA, opened in 1955 and is known as 'The Happiest Place on Earth.'", a: "Disneyland" },
+                    { q: "In this city, the world's longest-burning light bulb has been on since 1901.", a: "Livermore" },
+                    { q: "This state, which includes Mt. Whitney and Death Valley, has both the highest and lowest points in the contiguous United States.", a: "California" },
+                    { q: "The Hollywood Bowl, opened in 1922, was at the time the largest amphitheater in this country.", a: "The United States" },
+                    { q: "In 1996, this state became the first to legalize medical cannabis.", a: "California" }
+                ],
+                [
+                    { q: "This city, home to Berry Gordy Jr., is where Motown Records was founded in 1959.", a: "Detroit" },
+                    { q: "This U.S. state is made up of two peninsulas.", a: "Michigan" },
+                    { q: "This is the only place in the world with a floating post office.", a: "Detroit" },
+                    { q: "Which of the Great Lakes does not border Michigan? Lake Superior, Lake Michigan, Lake Erie, or Lake Ontario?", a: "Lake Ontario" },
+                    { q: "This state's voters approved 'Proposal 1' in 2018 to legalize, regulate, and tax marijuana for recreational use.", a: "Michigan" }
+                ],
+                [
+                    { q: "The 13th step of this Denver landmark is exactly one mile high above sea level.", a: "The State Capitol Building" },
+                    { q: "This popular Denver park is home to an iconic amphitheater with great acoustics.", a: "Red Rocks Park" },
+                    { q: "This Colorado city is located one mile above sea level.", a: "Denver" },
+                    { q: "Out of 91 U.S. 'fourteeners' (peaks over 14,000 feet), this state proudly calls 56 of them home.", a: "Colorado" },
+                    { q: "This state, alongside Washington, was the first to legalize the recreational use of cannabis in 2012.", a: "Colorado" }
+                ],
+                [
+                    { q: "This state is known as the 'Mother of Presidents,' as it's the birthplace of eight U.S. presidents.", a: "Ohio" },
+                    { q: "The Rock and Roll Hall of Fame is located in this Ohio city on the shores of Lake Erie.", a: "Cleveland" },
+                    { q: "The inventor of the incandescent light bulb, Thomas Edison, was born in this Ohio city.", a: "Milan" },
+                    { q: "This fast-food chain, known for its square burgers, was founded by Dave Thomas in Columbus in 1969.", a: "Wendy's" },
+                    { q: "This state's flag is the only pennant-shaped flag in the United States.", a: "Ohio" }
+                ],
+                [
+                    { q: "What is the common term for a cannabis cigarette rolled with paper?", a: "Joint" },
+                    { q: "The term for a cannabis concentrate with a glass-like consistency, often consumed by dabbing.", a: "Shatter" },
+                    { q: "This term, which can be an 'eighth' or a 'quarter,' refers to specific weights of cannabis.", a: "A bag" },
+                    { q: "This legendary strain, with a sweet dessert-like flavor, has origins in the San Francisco Bay Area.", a: "Girl Scout Cookies (GSC)" },
+                    { q: "A blunt is a cannabis cigar made by hollowing out a cigar or cigarillo and filling it with cannabis.", a: "True" }
+                ]
+            ]
+        };
+
+        const gameBoard = document.getElementById('game-board');
+        const modalOverlay = document.getElementById('modal-overlay');
+        const modalQuestion = document.getElementById('modal-question');
+        const modalAnswer = document.getElementById('modal-answer');
+        const modalButton = document.getElementById('modal-button');
+        const scoreButtons = document.getElementById('score-buttons');
+        const scoreElement = document.getElementById('score');
+
+        let currentCard = null;
+        let currentPoints = 0;
+        let score = 0;
+
+        // Function to render the game board
+        function renderBoard() {
+            // Add category headers first
+            jeopardyData.categories.forEach(category => {
+                const header = document.createElement('div');
+                header.className = 'category-header';
+                header.textContent = category;
+                gameBoard.appendChild(header);
+            });
+
+            // Add the question cards for each category
+            const points = [200, 400, 600, 800, 1000];
+            for (let i = 0; i < points.length; i++) {
+                jeopardyData.categories.forEach((category, catIndex) => {
+                    const point = points[i];
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.textContent = `$${point}`;
+                    card.dataset.catIndex = catIndex;
+                    card.dataset.qIndex = i; // Use the outer loop index for questions
+                    card.addEventListener('click', () => showQuestion(card, catIndex, i, point));
+                    gameBoard.appendChild(card);
+                });
+            }
+        }
+
+        // Function to show the question modal
+        function showQuestion(card, catIndex, qIndex, points) {
+            currentCard = card;
+            currentPoints = points;
+            const question = jeopardyData.questions[catIndex][qIndex].q;
+            const answer = jeopardyData.questions[catIndex][qIndex].a;
+
+            modalQuestion.textContent = question;
+            modalAnswer.textContent = answer;
+            modalAnswer.classList.add('hidden');
+            scoreButtons.classList.add('hidden');
+            modalButton.classList.remove('hidden');
+
+            modalOverlay.classList.add('active');
+        }
+
+        // Event listener for the reveal answer button
+        modalButton.addEventListener('click', () => {
+            modalAnswer.classList.remove('hidden');
+            scoreButtons.classList.remove('hidden');
+            modalButton.classList.add('hidden');
+        });
+
+        // Event listener for the correct button
+        document.getElementById('correct-button').addEventListener('click', () => {
+            score += currentPoints;
+            updateScore();
+            markAnswered();
+            hideModal();
+        });
+
+        // Event listener for the incorrect button
+        document.getElementById('incorrect-button').addEventListener('click', () => {
+            score -= currentPoints;
+            updateScore();
+            markAnswered();
+            hideModal();
+        });
+
+        // Function to update the score on the scoreboard
+        function updateScore() {
+            scoreElement.textContent = score;
+        }
+
+        // Function to mark a card as answered
+        function markAnswered() {
+            if (currentCard) {
+                currentCard.classList.add('answered');
+                currentCard.textContent = '';
+                currentCard = null;
+            }
+        }
+
+        // Function to hide the modal overlay
+        function hideModal() {
+            modalOverlay.classList.remove('active');
+        }
+
+        // Initial rendering of the game board
+        renderBoard();
+    });
+</script>
+
+</body>
+</html>
