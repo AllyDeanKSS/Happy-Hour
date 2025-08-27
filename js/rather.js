@@ -71,19 +71,9 @@ const questions = [
     option2: "Only gifs with team"
   },
   {
-    question: "Would you rather be a successful entrepreneur and work 80 hours a week or have a 9-to-5 job with a great work-life balance and a comfortable salary?",
-    option1: "Successful entrepreneur",
-    option2: "9-to-5 with work-life balance"
-  },
-  {
     question: "Would you rather have to clean the office bathrooms every week or organize the company's annual messy storage closet?",
     option1: "Clean bathrooms",
     option2: "Organize the storage closet"
-  },
-  {
-    question: "Would you rather be able to read your coworkers' minds or instantly know the solution to any work problem?",
-    option1: "Read coworkers' minds",
-    option2: "Instantly know the solution"
   },
   {
     question: "Would you rather have to give a 30-minute presentation on a topic you know nothing about or sit through a 2-hour meeting on a topic you're an expert on?",
@@ -100,6 +90,82 @@ const questions = [
     option1: "Team of robots",
     option2: "Team of clones"
   },
+  // --- NEW QUESTIONS ---
+  {
+    question: "Would you rather only be able to eat sweet foods or only be able to eat savory foods for the rest of your life?",
+    option1: "Sweet foods",
+    option2: "Savory foods"
+  },
+  {
+    question: "Would you rather have a personal chef or an unlimited gift card for all food delivery services?",
+    option1: "Personal chef",
+    option2: "Unlimited food delivery"
+  },
+  {
+    question: "Would you rather have a huge home cinema with every movie or a giant library with every book ever written?",
+    option1: "Home cinema with every movie",
+    option2: "Library with every book"
+  },
+  {
+    question: "Would you rather be an incredible singer or an incredible dancer?",
+    option1: "Singer",
+    option2: "Dancer"
+  },
+  {
+    question: "Would you rather be able to talk to animals or be able to speak all human languages?",
+    option1: "Talk to animals",
+    option2: "Speak all languages"
+  },
+  {
+    question: "Would you rather always have to wear a full business suit or always have to wear a clown costume?",
+    option1: "Business suit",
+    option2: "Clown costume"
+  },
+  {
+    question: "Would you rather live in a cabin in the woods or an apartment in a busy city?",
+    option1: "Cabin in the woods",
+    option2: "Apartment in the city"
+  },
+  {
+    question: "Would you rather have the power to teleport anywhere in the world or have the power to stop time?",
+    option1: "Teleport anywhere",
+    option2: "Stop time"
+  },
+  {
+    question: "Would you rather be able to eat whatever you want without gaining weight or be able to sleep for as long as you want without feeling groggy?",
+    option1: "Eat anything without gaining weight",
+    option2: "Sleep without feeling groggy"
+  },
+  {
+    question: "Would you rather have a pet dragon that is the size of a cat or a pet cat that is the size of a dragon?",
+    option1: "Cat-sized dragon",
+    option2: "Dragon-sized cat"
+  },
+  {
+    question: "Would you rather only be able to travel by train or only by boat?",
+    option1: "Travel by train",
+    option2: "Travel by boat"
+  },
+  {
+    question: "Would you rather be able to remember every movie you've ever watched or be able to remember every book you've ever read?",
+    option1: "Remember every movie",
+    option2: "Remember every book"
+  },
+  {
+    question: "Would you rather be a professional athlete or a world-renowned chef?",
+    option1: "Professional athlete",
+    option2: "World-renowned chef"
+  },
+  {
+    question: "Would you rather never have to do laundry again or never have to do dishes again?",
+    option1: "No laundry",
+    option2: "No dishes"
+  },
+  {
+    question: "Would you rather be an incredibly talented painter or an incredibly talented photographer?",
+    option1: "Painter",
+    option2: "Photographer"
+  }
 ];
 
 // --- Get DOM Elements ---
