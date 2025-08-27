@@ -63,6 +63,11 @@
             font-weight: bold;
             color: #a3e635;
         }
+        
+        .board-wrapper {
+            width: 100%;
+            position: relative;
+        }
 
         .board {
             display: grid;
@@ -112,6 +117,17 @@
             cursor: not-allowed;
             pointer-events: none;
             text-decoration: line-through;
+        }
+        
+        .round-button {
+            background-color: #a3e635;
+            color: #1a202c;
+            font-weight: bold;
+            padding: 12px 24px;
+            border-radius: 9999px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            margin-top: 20px;
         }
 
         .modal-overlay {
@@ -231,9 +247,12 @@
 <body>
 
 <div class="game-container">
-    <h1 class="game-title">The Dankest Jeopardy</h1>
+    <h1 class="game-title" id="game-title">The Dankest Jeopardy</h1>
     <div class="scoreboard-container" id="scoreboard-container"></div>
-    <div class="board" id="game-board"></div>
+    <div class="board-wrapper">
+        <div class="board" id="game-board"></div>
+        <button id="next-round-button" class="round-button hidden">Start Double Jeopardy</button>
+    </div>
 </div>
 
 <div class="modal-overlay" id="modal-overlay">
@@ -253,8 +272,9 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        // Define the categories and questions for the game.
+        // Data for the Single Jeopardy round
         const jeopardyData = {
+            title: "Jeopardy",
             categories: [
                 "California Culture",
                 "Michigan Made",
@@ -264,44 +284,93 @@
             ],
             questions: [
                 [
-                    { q: "This famous theme park in Anaheim, CA, opened in 1955 and is known as 'The Happiest Place on Earth.'", a: "Disneyland" },
-                    { q: "In this city, the world's longest-burning light bulb has been on since 1901.", a: "Livermore" },
-                    { q: "This state, which includes Mt. Whitney and Death Valley, has both the highest and lowest points in the contiguous United States.", a: "California" },
-                    { q: "The Hollywood Bowl, opened in 1922, was at the time the largest amphitheater in this country.", a: "The United States" },
-                    { q: "In 1996, this state became the first to legalize medical cannabis.", a: "California" }
+                    { q: "What famous California valley is responsible for producing over 80% of the world's almonds?", a: "The Central Valley" },
+                    { q: "This iconic prison island in San Francisco Bay was a federal penitentiary until 1963.", a: "Alcatraz Island" },
+                    { q: "The oldest active sailing ship in the world, the Star of India, is housed in this city.", a: "San Diego" },
+                    { q: "This city is home to the world's largest geothermal field, known as 'The Geysers.'", a: "Sonoma County" },
+                    { q: "This California trail, which many Gold Rush prospectors took, crossed the Sierra Nevada mountains.", a: "The California Trail" }
                 ],
                 [
-                    { q: "This city, home to Berry Gordy Jr., is where Motown Records was founded in 1959.", a: "Detroit" },
-                    { q: "This U.S. state is made up of two peninsulas.", a: "Michigan" },
-                    { q: "This is the only place in the world with a floating post office.", a: "Detroit" },
-                    { q: "Which of the Great Lakes does not border Michigan? Lake Superior, Lake Michigan, Lake Erie, or Lake Ontario?", a: "Lake Ontario" },
-                    { q: "This state's voters approved 'Proposal 1' in 2018 to legalize, regulate, and tax marijuana for recreational use.", a: "Michigan" }
+                    { q: "This Detroit-based company was founded by Berry Gordy Jr. in 1959.", a: "Motown Records" },
+                    { q: "The world's largest pickle and vinegar processing plant is located in this Michigan city.", a: "Holland" },
+                    { q: "The first tri-colored traffic signal was invented in this Michigan city in 1920.", a: "Detroit" },
+                    { q: "This Michigan city is home to the world's largest weathervane.", a: "Montague" },
+                    { q: "In 1847, the legislature passed a law to locate the state capital in this city.", a: "Lansing" }
                 ],
                 [
-                    { q: "The 13th step of this Denver landmark is exactly one mile high above sea level.", a: "The State Capitol Building" },
-                    { q: "This popular Denver park is home to an iconic amphitheater with great acoustics.", a: "Red Rocks Park" },
-                    { q: "This Colorado city is located one mile above sea level.", a: "Denver" },
-                    { q: "Out of 91 U.S. 'fourteeners' (peaks over 14,000 feet), this state proudly calls 56 of them home.", a: "Colorado" },
-                    { q: "This state, alongside Washington, was the first to legalize the recreational use of cannabis in 2012.", a: "Colorado" }
+                    { q: "This city is the highest incorporated city in the U.S.", a: "Leadville" },
+                    { q: "Colorado is known as the 'Centennial State' because it was admitted to the Union in this year.", a: "1876" },
+                    { q: "This iconic amphitheater near Denver is the only one of its kind in the world.", a: "Red Rocks" },
+                    { q: "The highest paved road in North America leads to the summit of this mountain near Idaho Springs.", a: "Mount Evans" },
+                    { q: "The Royal Gorge Bridge, the highest suspension bridge in the world, spans the Arkansas River near this city.", a: "Canon City" }
                 ],
                 [
-                    { q: "This state is known as the 'Mother of Presidents,' as it's the birthplace of eight U.S. presidents.", a: "Ohio" },
-                    { q: "The Rock and Roll Hall of Fame is located in this Ohio city on the shores of Lake Erie.", a: "Cleveland" },
-                    { q: "The inventor of the incandescent light bulb, Thomas Edison, was born in this Ohio city.", a: "Milan" },
+                    { q: "This city is home to the world's largest basket.", a: "Newark" },
                     { q: "This fast-food chain, known for its square burgers, was founded by Dave Thomas in Columbus in 1969.", a: "Wendy's" },
-                    { q: "This state's flag is the only pennant-shaped flag in the United States.", a: "Ohio" }
+                    { q: "The first professional baseball team, the Cincinnati Red Stockings, was formed in this Ohio city.", a: "Cincinnati" },
+                    { q: "This famous amusement park on Lake Erie is often called the 'roller coaster capital of the world.'", a: "Cedar Point" },
+                    { q: "This city is home to the National US Air Force Museum.", a: "Dayton" }
                 ],
                 [
-                    { q: "What is the common term for a cannabis cigarette rolled with paper?", a: "Joint" },
-                    { q: "The term for a cannabis concentrate with a glass-like consistency, often consumed by dabbing.", a: "Shatter" },
-                    { q: "This term, which can be an 'eighth' or a 'quarter,' refers to specific weights of cannabis.", a: "A bag" },
-                    { q: "This legendary strain, with a sweet dessert-like flavor, has origins in the San Francisco Bay Area.", a: "Girl Scout Cookies (GSC)" },
-                    { q: "A blunt is a cannabis cigar made by hollowing out a cigar or cigarillo and filling it with cannabis.", a: "True" }
+                    { q: "A cannabis concentrate known for its glass-like consistency.", a: "Shatter" },
+                    { q: "The term for a cannabis cigarette rolled with a hollowed-out cigar wrap.", a: "Blunt" },
+                    { q: "This unit of measurement, approximately 3.5 grams, is often referred to as a half-quarter.", a: "An Eighth" },
+                    { q: "This slang term for a cannabis dealer is often used online.", a: "Plug" },
+                    { q: "This term, a common Mexican slang word for cannabis, originally comes from the Spanish for 'herb.'", a: "Mota" }
                 ]
             ]
         };
 
-        // Players are now individual, not grouped in teams
+        // Data for the Double Jeopardy round
+        const doubleJeopardyData = {
+            title: "Double Jeopardy",
+            categories: [
+                "Cannabis S.T.E.M.",
+                "Pop Culture & States",
+                "Legal History",
+                "Geographic Wonders",
+                "Business & Economics"
+            ],
+            questions: [
+                [
+                    { q: "The primary psychoactive compound in cannabis, responsible for the 'high.'", a: "Tetrahydrocannabinol (THC)" },
+                    { q: "This non-psychoactive cannabis compound is often used for therapeutic purposes.", a: "Cannabidiol (CBD)" },
+                    { q: "The sticky, crystalline structures on the surface of cannabis flowers that contain cannabinoids and terpenes.", a: "Trichomes" },
+                    { q: "The process of heating cannabis to a specific temperature to activate its compounds.", a: "Decarboxylation" },
+                    { q: "What are the aromatic compounds in cannabis that give each strain its unique smell and flavor?", a: "Terpenes" }
+                ],
+                [
+                    { q: "The animated sitcom 'Family Guy' is famously set in this fictional town in Rhode Island.", a: "Quahog" },
+                    { q: "The movie 'Sleeper,' directed by Woody Allen, was set in this state, home to the Sleeper House atop Genessee Mountain.", a: "Colorado" },
+                    { q: "The first 'American Idol' winner, Kelly Clarkson, is from this state.", a: "Texas" },
+                    { q: "The TV series 'Stranger Things' is set in the fictional town of Hawkins, located in this U.S. state.", a: "Indiana" },
+                    { q: "The classic TV show 'The Mary Tyler Moore Show' was set in this Midwestern city.", a: "Minneapolis" }
+                ],
+                [
+                    { q: "Along with Washington, this state was one of the first two to legalize recreational cannabis in 2012.", a: "Colorado" },
+                    { q: "The Marihuana Tax Act, which effectively criminalized cannabis at the federal level, was passed in this year.", a: "1937" },
+                    { q: "This state became the first to legalize medical cannabis with the approval of Proposition 215.", a: "California" },
+                    { q: "In 2018, this state's voters passed Proposal 1 to legalize recreational use, making it the 10th state to do so.", a: "Michigan" },
+                    { q: "Ohio voters passed Issue 2 in this year to legalize recreational cannabis.", a: "2023" }
+                ],
+                [
+                    { q: "Known as the 'Mother of Presidents,' this state is the birthplace of eight U.S. presidents.", a: "Ohio" },
+                    { q: "The U.S. state that is made up of two peninsulas.", a: "Michigan" },
+                    { q: "The highest and lowest points in the contiguous United States, Mt. Whitney and Badwater Basin, are in this one state.", a: "California" },
+                    { q: "This state contains 75% of the land area above 10,000 feet in the U.S.", a: "Colorado" },
+                    { q: "The Great Serpent Mound, the largest serpent effigy in the world, is located in this state.", a: "Ohio" }
+                ],
+                [
+                    { q: "This city is the only place in the world with a floating post office.", a: "Detroit" },
+                    { q: "Terpenes are aromatic compounds found in plants. Which common citrus fruit has a terpene that is also found in cannabis, giving it a similar scent?", a: "Lemon" },
+                    { q: "What popular type of concentrate is made by a process that uses both heat and pressure, but no chemical solvents?", a: "Rosin" },
+                    { q: "California's top agricultural export is this nut, and it produces 82% of the world's supply.", a: "Almonds" },
+                    { q: "The world's largest indoor rodeo and stock show is hosted annually in this city.", a: "Denver" }
+                ]
+            ]
+        };
+
+        // Player data
         const players = [
             { name: "Alec Kent", score: 0 },
             { name: "Charles Hartman", score: 0 },
@@ -315,6 +384,7 @@
         ];
 
         // --- DOM Elements ---
+        const gameTitle = document.getElementById('game-title');
         const gameBoard = document.getElementById('game-board');
         const scoreboardContainer = document.getElementById('scoreboard-container');
         const modalOverlay = document.getElementById('modal-overlay');
@@ -326,18 +396,24 @@
         const correctButtonsContainer = document.getElementById('correct-buttons-container');
         const incorrectButtonsContainer = document.getElementById('incorrect-buttons-container');
         const passButton = document.getElementById('pass-button');
+        const nextRoundButton = document.getElementById('next-round-button');
 
         let currentCard = null;
         let currentPoints = 0;
+        let answeredCards = 0;
+        let currentRoundData = jeopardyData;
 
         // --- Game Logic Functions ---
 
         /**
-         * Renders the main game board with categories and question cards.
+         * Renders the main game board with categories and question cards for the current round.
          */
         function renderBoard() {
+            gameBoard.innerHTML = ''; // Clear the board for the new round
+            gameTitle.textContent = `${currentRoundData.title}`;
+
             // Add category headers first
-            jeopardyData.categories.forEach(category => {
+            currentRoundData.categories.forEach(category => {
                 const header = document.createElement('div');
                 header.className = 'category-header';
                 header.textContent = category;
@@ -345,9 +421,9 @@
             });
 
             // Add the question cards for each category
-            const points = [200, 400, 600, 800, 1000];
+            const points = currentRoundData === jeopardyData ? [200, 400, 600, 800, 1000] : [400, 800, 1200, 1600, 2000];
             for (let i = 0; i < points.length; i++) {
-                jeopardyData.categories.forEach((category, catIndex) => {
+                currentRoundData.categories.forEach((category, catIndex) => {
                     const point = points[i];
                     const card = document.createElement('div');
                     card.className = 'card';
@@ -397,8 +473,8 @@
         function showQuestion(card, catIndex, qIndex, points) {
             currentCard = card;
             currentPoints = points;
-            const question = jeopardyData.questions[catIndex][qIndex].q;
-            const answer = jeopardyData.questions[catIndex][qIndex].a;
+            const question = currentRoundData.questions[catIndex][qIndex].q;
+            const answer = currentRoundData.questions[catIndex][qIndex].a;
 
             modalQuestion.textContent = question;
             modalAnswer.textContent = answer;
@@ -409,6 +485,27 @@
             revealButton.classList.remove('hidden');
 
             modalOverlay.classList.add('active');
+            
+            // Increment the counter for answered cards
+            answeredCards++;
+            checkRoundCompletion();
+        }
+        
+        /**
+         * Checks if all cards in the current round have been answered.
+         */
+        function checkRoundCompletion() {
+            const totalCards = currentRoundData.categories.length * 5;
+            if (answeredCards >= totalCards) {
+                if (currentRoundData === jeopardyData) {
+                    nextRoundButton.textContent = "Start Double Jeopardy";
+                    nextRoundButton.classList.remove('hidden');
+                } else {
+                    // All rounds are complete
+                    nextRoundButton.textContent = "Game Over!";
+                    nextRoundButton.disabled = true;
+                }
+            }
         }
 
         /**
@@ -443,6 +540,14 @@
 
         // Event listener for the "No one got it / Pass" button
         passButton.addEventListener('click', hideModal);
+        
+        // Event listener for the "Next Round" button
+        nextRoundButton.addEventListener('click', () => {
+            currentRoundData = doubleJeopardyData;
+            answeredCards = 0; // Reset for the new round
+            renderBoard();
+            nextRoundButton.classList.add('hidden');
+        });
 
         // --- Dynamic Button Generation ---
         
