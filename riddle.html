@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Riddle Relay</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0d1117;
+            color: #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .game-title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #a3e635;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            margin-bottom: 10px;
+        }
+
+        .timer-display {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #cbd5e1;
+            margin-bottom: 20px;
+        }
+
+        .game-card {
+            background-color: #1a202c;
+            border: 2px solid #a3e635;
+            border-radius: 12px;
+            padding: 40px;
+            width: 100%;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        .riddle-text {
+            font-size: 2.25rem;
+            font-weight: bold;
+            font-style: italic;
+            margin-bottom: 20px;
+        }
+        
+        .answer-text {
+            font-size: 2.25rem;
+            font-weight: bold;
+            color: #a3e635;
+            margin-top: 10px;
+        }
+
+        .solution-input {
+            background-color: #2d3748;
+            color: #e2e8f0;
+            border: 2px solid #a3e635;
+            border-radius: 8px;
+            padding: 12px 20px;
+            font-size: 1.5rem;
+            text-align: center;
+            width: 80%;
+            max-width: 400px;
+        }
+        
+        .game-button {
+            background-color: #a3e635;
+            color: #1a202c;
+            font-weight: bold;
+            padding: 12px 24px;
+            border-radius: 9999px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .game-button:hover {
+            background-color: #86efac;
+        }
+
+        .feedback-message {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-top: 10px;
+            min-height: 2rem;
+        }
+        
+        .correct {
+            color: #a3e635;
+        }
+
+        .incorrect {
+            color: #fca5a5;
+        }
+        
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .game-title {
+                font-size: 2rem;
+            }
+            .timer-display {
+                font-size: 2rem;
+            }
+            .riddle-text {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="game-container">
+    <h1 class="game-title">Riddle Relay</h1>
+    <div id="timer-display" class="timer-display hidden">0:00</div>
+
+    <div id="start-screen" class="game-card">
+        <p class="riddle-text">The goal is to solve all the riddles as a team in the fastest time possible. You have three tries per riddle. Click 'Start' when you're ready!</p>
+        <button id="start-button" class="game-button">Start Game</button>
+    </div>
+
+    <div id="riddle-screen" class="game-card hidden">
+        <p id="current-riddle-text" class="riddle-text"></p>
+        <input type="text" id="solution-input" class="solution-input" placeholder="Enter your answer">
+        <button id="submit-button" class="game-button">Submit Answer</button>
+        
+        <div id="feedback-container" class="mt-4">
+            <p id="feedback-message" class="feedback-message"></p>
+            <p id="correct-answer-text" class="answer-text hidden"></p>
+        </div>
+        
+        <button id="next-riddle-button" class="game-button hidden">Next Riddle</button>
+    </div>
+    
+    <div id="end-screen" class="game-card hidden">
+        <p class="riddle-text">Congratulations! You solved all the riddles!</p>
+        <p class="text-2xl mt-4">Your final time is:</p>
+        <p id="final-time-display" class="timer-display"></p>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Define the riddles and their solutions.
+        const riddles = [
+            { riddle: "I have cities, but no houses. I have mountains, but no trees. I have water, but no fish. What am I?", solution: "a map" },
+            { riddle: "I have an eye, but cannot see. What am I?", solution: "a needle" },
+            { riddle: "What has to be broken before you can use it?", solution: "an egg" },
+            { riddle: "What is full of holes but still holds water?", solution: "a sponge" },
+            { riddle: "I can be cracked, made, told, and played. What am I?", solution: "a joke" },
+            { riddle: "The more you take, the more you leave behind. What are they?", solution: "footsteps" },
+            { riddle: "What has a neck but no head?", solution: "a bottle" },
+            { riddle: "I speak without a mouth and hear without ears. I have no body, but I come alive with the wind. What am I?", solution: "an echo" },
+            { riddle: "What question can you never answer yes to?", solution: "are you asleep yet" },
+            { riddle: "I’m tall when I’m young, and I’m short when I’m old. What am I?", solution: "a candle" }
+        ];
+
+        // --- DOM Elements ---
+        const startScreen = document.getElementById('start-screen');
+        const startButton = document.getElementById('start-button');
+        const riddleScreen = document.getElementById('riddle-screen');
+        const currentRiddleText = document.getElementById('current-riddle-text');
+        const solutionInput = document.getElementById('solution-input');
+        const submitButton = document.getElementById('submit-button');
+        const feedbackMessage = document.getElementById('feedback-message');
+        const correctAnswerText = document.getElementById('correct-answer-text');
+        const nextRiddleButton = document.getElementById('next-riddle-button');
+        const timerDisplay = document.getElementById('timer-display');
+        const endScreen = document.getElementById('end-screen');
+        const finalTimeDisplay = document.getElementById('final-time-display');
+
+        // --- Game State Variables ---
+        let currentRiddleIndex = 0;
+        let incorrectTries = 0;
+        let startTime;
+        let timerInterval;
+
+        // --- Game Logic Functions ---
+
+        /**
+         * Starts the game, begins the timer, and displays the first riddle.
+         */
+        function startGame() {
+            startScreen.classList.add('hidden');
+            riddleScreen.classList.remove('hidden');
+            timerDisplay.classList.remove('hidden');
+            
+            startTime = Date.now();
+            timerInterval = setInterval(updateTimer, 1000);
+            
+            displayRiddle();
+            solutionInput.focus();
+        }
+
+        /**
+         * Checks the user's answer and provides feedback.
+         */
+        function checkAnswer() {
+            const userAnswer = solutionInput.value.toLowerCase().trim();
+            const correctAnswer = riddles[currentRiddleIndex].solution.toLowerCase().trim();
+
+            if (userAnswer === correctAnswer) {
+                feedbackMessage.textContent = "Correct!";
+                feedbackMessage.classList.add('correct');
+                feedbackMessage.classList.remove('incorrect');
+                
+                // Hide submit button and show next riddle button
+                submitButton.classList.add('hidden');
+                nextRiddleButton.classList.remove('hidden');
+            } else {
+                incorrectTries++;
+                if (incorrectTries >= 3) {
+                    feedbackMessage.textContent = "Out of tries.";
+                    feedbackMessage.classList.add('incorrect');
+                    correctAnswerText.textContent = `The answer is: ${riddles[currentRiddleIndex].solution}`;
+                    correctAnswerText.classList.remove('hidden');
+                    
+                    // Hide submit and show next riddle button
+                    submitButton.classList.add('hidden');
+                    nextRiddleButton.classList.remove('hidden');
+                } else {
+                    feedbackMessage.textContent = `Incorrect, try again. ${3 - incorrectTries} tries left.`;
+                    feedbackMessage.classList.add('incorrect');
+                }
+            }
+            solutionInput.value = '';
+        }
+
+        /**
+         * Displays the next riddle on the screen and resets the interface.
+         */
+        function displayRiddle() {
+            incorrectTries = 0;
+            solutionInput.value = '';
+            feedbackMessage.textContent = '';
+            correctAnswerText.classList.add('hidden');
+            submitButton.classList.remove('hidden');
+            nextRiddleButton.classList.add('hidden');
+            
+            currentRiddleText.textContent = riddles[currentRiddleIndex].riddle;
+            solutionInput.focus();
+        }
+
+        /**
+         * Updates the timer display every second.
+         */
+        function updateTimer() {
+            const elapsedTime = Date.now() - startTime;
+            const minutes = Math.floor(elapsedTime / 60000);
+            const seconds = Math.floor((elapsedTime % 60000) / 1000);
+            const formattedSeconds = seconds < 10 ? `0${seconds}` : seconds;
+            timerDisplay.textContent = `${minutes}:${formattedSeconds}`;
+        }
+
+        /**
+         * Ends the game, stops the timer, and displays the final time.
+         */
+        function endGame() {
+            clearInterval(timerInterval);
+            riddleScreen.classList.add('hidden');
+            endScreen.classList.remove('hidden');
+            finalTimeDisplay.textContent = timerDisplay.textContent;
+        }
+
+        // --- Event Listeners ---
+        startButton.addEventListener('click', startGame);
+        submitButton.addEventListener('click', checkAnswer);
+        nextRiddleButton.addEventListener('click', () => {
+            currentRiddleIndex++;
+            if (currentRiddleIndex < riddles.length) {
+                displayRiddle();
+            } else {
+                endGame();
+            }
+        });
+
+        solutionInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                checkAnswer();
+            }
+        });
+    });
+</script>
+</body>
+</html>
